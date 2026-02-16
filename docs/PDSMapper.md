@@ -145,21 +145,24 @@ Parameters not mapped to any dimension get midpoint values:
 
 ## Applications
 
-**JGC mitochondrial simulator.** Map Zimmerman's (2025) PDS framework to patient parameters:
+**JGC mitochondrial simulator.** Map Zimmerman's (2025) PDS framework to the 12D mitochondrial aging parameter space. Power maps to protective interventions (rapamycin, transplant, exercise); Danger maps to risk factors (yamanaka energy cost, inflammation, genetic vulnerability); Structure maps to baseline patient characteristics:
 
 ```python
-mapper = PDSMapper(mito_sim,
-    dimension_names=["power", "danger", "structure"],
-    dimension_to_param_mapping={
-        "power":     {"metabolic_demand": 0.4, "genetic_vulnerability": -0.2},
-        "danger":    {"inflammation_level": 0.25, "genetic_vulnerability": 0.3},
-        "structure": {"repair_capacity": 0.5, "membrane_integrity": 0.3},
-    }
-)
+from zimmerman.pds import PDSMapper
+from zimmerman_bridge import MitoSimulator
 
-# A "high power, low danger" patient:
-params = mapper.map_dimensions_to_params({"power": 0.9, "danger": -0.5, "structure": 0.3})
-result = mito_sim.run(params)
+sim = MitoSimulator()  # full 12D
+
+mapping = {
+    "power": {"rapamycin_dose": 0.4, "transplant_rate": 0.4, "exercise_level": 0.2},
+    "danger": {"yamanaka_intensity": 0.3, "inflammation_level": 0.4, "genetic_vulnerability": 0.3},
+    "structure": {"nad_supplement": 0.3, "senolytic_dose": 0.2, "baseline_age": 0.2,
+                  "metabolic_demand": 0.15, "baseline_heteroplasmy": 0.15},
+}
+pds = PDSMapper(sim, ["power", "danger", "structure"], mapping)
+audit = pds.audit_mapping(n_samples=100, seed=42)
+# audit["variance_explained"] shows high R² for energy and damage pillars
+# Power dimension captures protective capacity; Danger captures cliff risk
 ```
 
 **ER robot gait design.** Explore behavioral space through semantic dimensions:

@@ -186,19 +186,29 @@ print(batch_knife["mean_flip_size"])
 # 0.15 -- knife-edge gait is fragile, near many decision boundaries
 ```
 
-**JGC: Which intervention change crosses the heteroplasmy cliff?** Locate the intervention parameter that pushes damaged mitochondria past the ~70% heteroplasmy threshold:
+**JGC: Which intervention change crosses the heteroplasmy cliff?** The mitochondrial aging simulator has a critical nonlinearity at ~70% heteroplasmy. Edit-path analysis locates which parameter is most often the "last straw" pushing a patient past the cliff:
 
 ```python
-gen = ContrastSetGenerator(mito_sim, outcome_fn=lambda r: "healthy" if r["het_final"] < 0.7 else "cliff")
+from zimmerman.contrast_set_generator import ContrastSetGenerator
+from zimmerman_bridge import MitoSimulator
 
-patient_params = {"exercise": 0.5, "antioxidant": 0.3, "caloric_restriction": 0.4, ...}
-batch = gen.batch_contrast_sets(patient_params, n_paths=30)
+sim = MitoSimulator()  # full 12D
 
-print(batch["most_fragile_params"][:3])
-# ["genetic_vulnerability", "metabolic_demand", "exercise"]
-# genetic_vulnerability is most often the cliff trigger
-print(batch["mean_flip_size"])
-# 0.35 -- this patient is moderately close to the cliff
+def cliff_outcome(result):
+    het = result.get("final_heteroplasmy", 0.5)
+    return "collapsed" if het >= 0.70 else "healthy"
+
+gen = ContrastSetGenerator(sim, outcome_fn=cliff_outcome)
+
+base_params = {"rapamycin_dose": 0.0, "nad_supplement": 0.0, "senolytic_dose": 0.0,
+               "yamanaka_intensity": 0.0, "transplant_rate": 0.0, "exercise_level": 0.0,
+               "baseline_age": 70.0, "baseline_heteroplasmy": 0.3, "baseline_nad_level": 0.6,
+               "genetic_vulnerability": 1.0, "metabolic_demand": 1.0, "inflammation_level": 0.25}
+
+result = gen.batch_contrast_sets(base_params, n_paths=10, n_edits=20, seed=42)
+# result["mean_flip_size"] → 0.375; most fragile param: baseline_heteroplasmy
+# 10 tipping points found, mean flip size=0.375
+# baseline_heteroplasmy is most often the decisive edit crossing the cliff
 ```
 
 ---

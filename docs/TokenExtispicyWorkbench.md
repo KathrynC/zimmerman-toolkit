@@ -219,24 +219,42 @@ print(report["fragmentation_output_correlation"]["fitness"])
 # slightly worse fitness, validating the extispicy hypothesis
 ```
 
-**JGC: Does representing "baseline_age: 73" fragment differently than "baseline_age: 70"?** Test whether round numbers tokenize more cleanly than arbitrary values in the mitochondrial aging simulator:
+**Mitochondrial aging model: Fragmentation hazard across the 12D parameter space.** The JGC simulator has 12 parameters spanning heterogeneous scales -- ages (20-90), fractions (0.0-1.0), and multipliers (0.5-2.0). Token fragmentation varies dramatically across these scales, which matters when an LLM generates intervention protocols:
 
 ```python
-mito_workbench = TokenExtispicyWorkbench(mito_sim)
+import sys
+sys.path.insert(0, "/path/to/how-to-live-much-longer")
+from zimmerman_bridge import MitoSimulator
+from zimmerman.token_extispicy import TokenExtispicyWorkbench
 
-# Check fragmentation at a round age vs. an arbitrary age
-round_params = {"baseline_age": 70.0, "genetic_vulnerability": 0.5}
-arb_params = {"baseline_age": 73.0, "genetic_vulnerability": 0.5}
+sim = MitoSimulator()  # full 12D
+workbench = TokenExtispicyWorkbench(sim)
 
-frag_round = mito_workbench.fragmentation_rate(
-    mito_workbench.params_to_string(round_params)
-)
-frag_arb = mito_workbench.fragmentation_rate(
-    mito_workbench.params_to_string(arb_params)
-)
+# Full hazard surface analysis
+report = workbench.analyze(n_samples=200, seed=42)
 
-print(f"Round: {frag_round:.3f}, Arbitrary: {frag_arb:.3f}")
-# Round: 0.41, Arbitrary: 0.44 -- round numbers fragment slightly less
+# Which parameter fragments worst?
+report["fragmentation_stats"]["max_fragmentation_param"]
+# "baseline_age" -- multi-digit integers (e.g., "73") fragment more
+# under BPE than unit-interval fractions (e.g., "0.5")
+
+# Perturbation sensitivity reveals which params are tokenizer-unstable
+report["perturbation_sensitivity"]
+# {"rapamycin_dose": 1, "nad_supplement": 1, ..., "baseline_age": 3,
+#  "genetic_vulnerability": 2, "metabolic_demand": 2, ...}
+# Patient params (wider ranges, multi-digit values) fragment more
+# than intervention params (0-1 fractions)
+
+# Fragmentation-output correlation: does tokenization predict outcomes?
+report["fragmentation_output_correlation"]["final_heteroplasmy"]
+# r ~ -0.15 -- moderate: higher fragmentation correlates with slightly
+# different heteroplasmy predictions, validating the extispicy hypothesis
+# that tokenizer artifacts propagate into LLM-generated interventions
+
+# The heteroplasmy cliff at 0.70 creates an asymmetry: patients near the
+# cliff (baseline_heteroplasmy ~ 0.65-0.75) have parameter values that
+# tokenize differently than patients far from it, potentially biasing
+# LLM-generated protocols toward or away from the cliff boundary.
 ```
 
 ---

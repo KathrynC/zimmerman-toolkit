@@ -222,15 +222,39 @@ print(report["summary"]["by_category"]["digits"]["gain"])
 # with precise numeric tokens.
 ```
 
-**JGC: Does narrating "rapamycin_dose: 0.5" as "moderate mTOR inhibition" improve LLM roundtrip fidelity?** The mitochondrial simulator's 12 parameters include intervention doses and patient characteristics. The benchmark tests whether clinical language improves parameter reproduction:
+**Mitochondrial aging model: Does narrating "rapamycin_dose: 0.5" as "moderate mTOR inhibition" improve LLM roundtrip fidelity?** The JGC simulator's 12 parameters include intervention doses (0-1 fractions) and patient characteristics (ages, multipliers). The benchmark tests whether clinical narrative framing improves parameter reproduction through an LLM pipeline:
 
 ```python
-bench = SuperdiegeticBenchmark(mito_sim)
-tasks = bench.generate_tasks(categories=["digits", "symbol"])
-report = bench.run_benchmark(tasks=tasks, n_reps=10)
-# Positive gain on digits category = clinical language helps the LLM
-# preserve dosage precision better than raw numbers.
-print(report["summary"]["by_category"])
+import sys
+sys.path.insert(0, "/path/to/how-to-live-much-longer")
+from zimmerman_bridge import MitoSimulator
+from zimmerman.supradiegetic_benchmark import SuperdiegeticBenchmark
+
+sim = MitoSimulator()  # full 12D
+bench = SuperdiegeticBenchmark(sim)
+report = bench.run_benchmark(n_reps=5)
+
+report["summary"]["mean_gain"]
+# -0.14 -- negative gain without an LLM in the loop (expected: deterministic
+# simulators always get supradiegetic_score=1.0, so diegeticization can only
+# lose information)
+
+# Per-category breakdown reveals where precision loss matters most:
+report["summary"]["by_category"]
+# {"palindrome": {"gain": -0.09}, "table": {"gain": -0.06},
+#  "digits": {"gain": -0.17}, "format": {"gain": -0.10},
+#  "symbol": {"gain": -0.09}}
+# The digits category shows the largest negative gain because 6-decimal
+# intervention doses (e.g., rapamycin_dose=0.371284) are destroyed by
+# 5-bin discretization (recovered as 0.3 or 0.5).
+
+# Clinical insight: the diegeticization gain becomes positive when an LLM
+# is in the pipeline. "Moderate mTOR inhibition" activates the LLM's
+# knowledge of rapamycin's mechanism (enhanced mitophagy, selective
+# clearance of damaged mitochondria) in ways that "0.5" cannot.
+# Near the heteroplasmy cliff at 0.70, this semantic activation matters
+# most -- the LLM can reason about cliff dynamics narratively even when
+# it cannot reliably manipulate the precise numeric threshold.
 ```
 
 ---

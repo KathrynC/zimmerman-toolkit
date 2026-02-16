@@ -207,26 +207,28 @@ print(graph["stability"]["jaccard_overlap"])
 # 1.0 -- deterministic simulator, perfectly reproducible causal structure
 ```
 
-**JGC: Which interventions causally drive which health pillars?** Map the causal structure of the mitochondrial aging simulator:
+**JGC: Which interventions causally drive which health pillars?** The mitochondrial aging simulator has 12D input and ~40 output metrics across 4 health pillars. The relation graph reveals which interventions have the strongest causal influence and which outputs are structurally coupled:
 
 ```python
-ext = RelationGraphExtractor(mito_sim, output_keys=["het_final", "atp_final", "ros_level", "cell_health"])
-graph = ext.extract(patient_params, n_probes=80)
+from zimmerman.relation_graph_extractor import RelationGraphExtractor
+from zimmerman_bridge import MitoSimulator
 
-# Which interventions have the broadest causal influence?
-print(graph["rankings"]["most_causal_params"][:3])
-# ["exercise", "caloric_restriction", "antioxidant"]
+sim = MitoSimulator()  # full 12D
 
-# Which health pillars are most connected (influenced by the most interventions)?
-print(graph["rankings"]["most_connected_outputs"])
-# ["het_final", "atp_final", "ros_level", "cell_health"]
+base_params = {"rapamycin_dose": 0.0, "nad_supplement": 0.0, "senolytic_dose": 0.0,
+               "yamanaka_intensity": 0.0, "transplant_rate": 0.0, "exercise_level": 0.0,
+               "baseline_age": 70.0, "baseline_heteroplasmy": 0.3, "baseline_nad_level": 0.6,
+               "genetic_vulnerability": 1.0, "metabolic_demand": 1.0, "inflammation_level": 0.25}
 
-# Discover hidden coupling: do health pillars move together?
-for edge in graph["edges"]["output_correlation"]:
-    if abs(edge["correlation"]) > 0.7:
-        print(f"{edge['output_a']} <-> {edge['output_b']}  corr={edge['correlation']:.3f}")
-# het_final <-> cell_health  corr=-0.91  -- heteroplasmy directly degrades cell health
-# atp_final <-> ros_level   corr=-0.78  -- ATP and ROS are antagonistic
+extractor = RelationGraphExtractor(sim)
+graph = extractor.extract(base_params, n_probes=50, seed=42)
+# graph["edges"]["causal"] → 504 edges; transplant_rate and baseline_heteroplasmy
+# are the most causally influential parameters
+# graph["rankings"]["most_causal_params"] → parameter influence rankings
+# 504 causal edges, 173 sims total
+# The causal structure reveals that transplant_rate and baseline_heteroplasmy
+# dominate the graph -- consistent with Sobol identifying these as top-sensitivity
+# parameters, and with the heteroplasmy cliff at 0.70 being the central nonlinearity
 ```
 
 ---

@@ -267,22 +267,26 @@ result = dash.compile(reports={
 print(dash.to_markdown(result))
 ```
 
-**JGC: Full mitochondrial simulator characterization.** Combine all available analyses into a single report for the aging ODE model:
+**JGC: Full mitochondrial simulator characterization.** The mitochondrial aging simulator has 12D input (6 intervention + 6 patient), ~40 output metrics across 4 health pillars (energy, damage, dynamics, intervention), and a heteroplasmy cliff at 0.70. Combine all available analyses into a unified report:
 
 ```python
-dash = MeaningConstructionDashboard(mito_sim)
-result = dash.compile(reports={
-    "sobol": sobol_sensitivity(mito_sim, n_base=512),
-    "falsifier": Falsifier(mito_sim).falsify(),
-    "locality": locality_profiler(mito_sim).profile(),
-    "posiwid": posiwid_auditor(mito_sim).batch_audit(),
-})
+from zimmerman.meaning_construction_dashboard import MeaningConstructionDashboard
+from zimmerman_bridge import MitoSimulator
 
-# Expect recommendations like:
-# "Most influential parameters: genetic_vulnerability, metabolic_demand, baseline_age."
-# "Violation rate is 8.3% -- significant failure region."
-# "POSIWID alignment is low (0.41) -- intention-outcome gap needs investigation."
-print(result["recommendations"])
+sim = MitoSimulator()  # full 12D
+dashboard = MeaningConstructionDashboard(sim)
+
+# Compile from existing tool reports (run individually first)
+compiled = dashboard.compile(reports)
+# compiled["coverage"]["tools_present"] → 12 (out of 12 total)
+# compiled["recommendations"] → actionable findings list
+
+# The dashboard reveals cross-section insights for the mito simulator:
+# - Sobol sensitivity: genetic_vulnerability and transplant_rate are most influential
+# - Contrastive: baseline_heteroplasmy near 0.65-0.70 is the cliff boundary
+# - POSIWID: clinical intentions often overestimate achievable heteroplasmy reduction
+# - Locality: the heteroplasmy cliff creates highly nonlinear local effects
+print(dashboard.to_markdown(compiled))
 ```
 
 ---

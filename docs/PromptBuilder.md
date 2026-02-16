@@ -197,6 +197,32 @@ for model in ["qwen3-coder:30b", "deepseek-r1:8b", "llama3.1"]:
     # diegetic prompts should yield more consistent cross-model behavior
 ```
 
+**JGC: Designing mitochondrial intervention protocols via LLM.** The 12D mitochondrial aging simulator benefits from all three prompt styles. The heteroplasmy cliff at 0.70 makes diegetic framing especially valuable -- the LLM can reason about clinical tradeoffs narratively rather than navigating raw parameter ranges:
+
+```python
+from zimmerman.prompts import PromptBuilder
+from zimmerman_bridge import MitoSimulator
+
+sim = MitoSimulator()  # full 12D
+builder = PromptBuilder(sim, context={
+    "domain": "Mitochondrial aging dynamics (Cramer 2025)",
+    "goal": "Design intervention protocols to delay heteroplasmy cliff",
+})
+
+# Numeric: baseline request for raw parameter values
+numeric = builder.build_numeric("70-year-old with 30% heteroplasmy, declining NAD+")
+
+# Diegetic: narrative-embedded framing exploits LLM semantic strengths
+diegetic = builder.build_diegetic("70-year-old with 30% heteroplasmy",
+    state_description="het=0.30, ATP=0.82, NAD=0.60")
+
+# Contrastive: opposing clinical philosophies bracket the solution space
+contrastive = builder.build_contrastive("70-year-old with 30% heteroplasmy",
+    agent_a="conservative geriatrician", agent_b="aggressive biohacker")
+# The conservative geriatrician prioritizes safety and minimal intervention;
+# the aggressive biohacker pushes maximum response to delay the cliff
+```
+
 ---
 
 ## Properties & Relations

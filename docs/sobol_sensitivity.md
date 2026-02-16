@@ -143,13 +143,43 @@ for gait_name, gait_data in zoo.items():
 
 This campaign (328,192 simulations, ~7 hours) produces a sensitivity atlas revealing whether antifragile gaits have distributed S1 profiles (no single dominant weight) while knife-edge gaits concentrate sensitivity on one or two weights.
 
-**Mitochondrial aging model.** Identify which patient parameters most strongly influence heteroplasmy trajectory:
+**Mitochondrial aging model (12D).** The JGC mitochondrial simulator exposes 12 parameters (6 intervention + 6 patient) via `MitoSimulator`. At `n_base=32`, Saltelli sampling requires 32 * (12 + 2) = 448 simulations -- enough for a quick survey of the sensitivity landscape:
 
 ```python
-result = sobol_sensitivity(mito_sim, n_base=512)
-# Expect: genetic_vulnerability has highest ST for het_final
-# Expect: metabolic_demand has highest S1 for atp_final
+import sys
+sys.path.insert(0, "/path/to/how-to-live-much-longer")
+from zimmerman_bridge import MitoSimulator
+from zimmerman.sobol import sobol_sensitivity
+
+sim = MitoSimulator()  # full 12D (intervention + patient)
+result = sobol_sensitivity(sim, n_base=32)
+
+result["n_total_sims"]
+# 448
+
+# First-order indices for final heteroplasmy reveal which parameters
+# independently drive the fraction of damaged mtDNA after 30 years:
+result["final_heteroplasmy"]["S1"]
+# Top S1: transplant_rate=0.28, metabolic_demand=0.27, genetic_vulnerability=-0.23
+# Transplant is the strongest independent driver because it directly
+# displaces damaged mitochondria (Cramer Ch. VIII.G: primary rejuvenation).
+
+# Total-order indices capture interaction effects -- genetic_vulnerability
+# rises from S1=-0.23 to ST=0.32 because it amplifies every other parameter:
+result["final_heteroplasmy"]["ST"]
+# Top ST: genetic_vulnerability=0.32, transplant_rate=0.29, rapamycin_dose=0.25
+# The gap (ST - S1) for genetic_vulnerability reveals it acts primarily
+# through interactions: a high-vulnerability patient amplifies the effect
+# of every intervention, especially near the heteroplasmy cliff at 0.70.
+
+# Rankings confirm the clinical hierarchy:
+result["rankings"]["final_heteroplasmy_most_influential_S1"]
+# ['transplant_rate', 'metabolic_demand', 'genetic_vulnerability', ...]
+result["rankings"]["final_heteroplasmy_most_interactive"]
+# ['genetic_vulnerability', 'rapamycin_dose', 'metabolic_demand', ...]
 ```
+
+For publication-quality indices, increase to `n_base=256` (3584 sims, ~3 minutes). The intervention-only mode (`MitoSimulator(intervention_only=True)`) reduces to 6D with 256 * 8 = 2048 sims, fixing patient parameters to a default 70-year-old.
 
 ---
 

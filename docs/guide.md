@@ -198,6 +198,73 @@ The entire toolkit is pure numpy — no scipy, no SALib, no sklearn. This is del
 
 ---
 
+## Case Study: JGC Mitochondrial Aging Simulator
+
+The mitochondrial aging simulator (based on John G. Cramer's 2025 book *How to Live Much Longer*) demonstrates how all fourteen tools connect on a real research problem. The simulator has 12D input (6 intervention parameters + 6 patient parameters), produces ~40 output metrics across 4 health pillars (energy, damage, dynamics, intervention), and exhibits a critical heteroplasmy cliff at 0.70. The bridge is `zimmerman_bridge.MitoSimulator`.
+
+```python
+from zimmerman_bridge import MitoSimulator
+sim = MitoSimulator()  # full 12D
+```
+
+### Central Nonlinearity: The Heteroplasmy Cliff
+
+The heteroplasmy cliff at 70% damaged mitochondrial DNA is the central nonlinearity of the simulator. Below this threshold, cells compensate; above it, ATP production collapses and cellular health degrades rapidly. Every Zimmerman tool reveals a different facet of this cliff:
+
+- **Sobol sensitivity** reveals `genetic_vulnerability` and `transplant_rate` as the most globally influential parameters across the full parameter range.
+- **Contrastive analysis** finds the cliff boundary directly: tiny changes in `baseline_heteroplasmy` near 0.65-0.70 flip outcomes from "healthy" to "collapsed." Real analysis found 2 flip pairs from 3 starting points.
+- **Contrast set generation** maps the edit-space around the cliff: `mean_flip_size = 0.375` across 10 tipping points, with `baseline_heteroplasmy` as the most fragile parameter.
+- **POSIWID auditing** reveals that clinical intentions often overestimate achievable heteroplasmy reduction. Mean alignment of 0.797 across 5 scenarios shows mild rapamycin falls short of intended targets.
+- **PDS mapping** maps Power to protective interventions (rapamycin, transplant, exercise), Danger to risk factors (yamanaka energy cost, inflammation, genetic vulnerability), and Structure to baseline patient characteristics. The mapping shows high R-squared for energy and damage pillars.
+- **Relation graph extraction** produces 504 causal edges from 173 simulations, confirming `transplant_rate` and `baseline_heteroplasmy` as the most causally influential parameters.
+- **Prompt building** for LLM-mediated intervention design benefits especially from diegetic framing -- the LLM can reason about clinical tradeoffs narratively rather than navigating raw 12D parameter ranges.
+- **The dashboard** compiles all findings into a unified report with cross-section recommendations, achieving full 12-tool coverage.
+
+### Workflow Example
+
+```python
+from zimmerman_bridge import MitoSimulator
+from zimmerman.sobol import sobol_sensitivity
+from zimmerman.contrastive import ContrastiveGenerator
+from zimmerman.posiwid import POSIWIDAuditor
+from zimmerman.pds import PDSMapper
+from zimmerman.prompts import PromptBuilder
+from zimmerman.meaning_construction_dashboard import MeaningConstructionDashboard
+
+sim = MitoSimulator()
+
+# 1. Map global sensitivity
+sobol_report = sobol_sensitivity(sim, n_base=256)
+
+# 2. Find the cliff boundary
+def cliff_outcome(result):
+    het = result.get("final_heteroplasmy", 0.5)
+    return "collapsed" if het >= 0.70 else "healthy"
+
+gen = ContrastiveGenerator(sim, outcome_fn=cliff_outcome)
+contrastive_report = gen.find_contrastive(base_params, n_attempts=50, seed=42)
+
+# 3. Audit intention-outcome alignment
+auditor = POSIWIDAuditor(sim)
+posiwid_report = auditor.audit(
+    intended_outcomes={"final_heteroplasmy": 0.25, "final_atp": 0.85},
+    params=base_params)
+
+# 4. Design prompts for LLM-mediated parameter generation
+builder = PromptBuilder(sim, context={
+    "domain": "Mitochondrial aging dynamics (Cramer 2025)",
+    "goal": "Design intervention protocols to delay heteroplasmy cliff",
+})
+prompt = builder.build_diegetic("70-year-old with 30% heteroplasmy",
+    state_description="het=0.30, ATP=0.82, NAD=0.60")
+
+# 5. Compile unified dashboard
+dashboard = MeaningConstructionDashboard(sim)
+compiled = dashboard.compile(reports)
+```
+
+---
+
 ## Installation
 
 ```bash

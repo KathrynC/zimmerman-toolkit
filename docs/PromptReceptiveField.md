@@ -182,25 +182,57 @@ print(f"Body ST:   {report['ST']['physics_params']:.3f}")
 print(f"Brain interaction: {report['interaction']['synaptic_weights']:.3f}")
 ```
 
-**JGC mitochondrial model: which intervention categories matter.** Segment the 12D parameter space into intervention parameters (what the patient does) and patient parameters (who the patient is):
+**Mitochondrial aging model: which parameter categories drive outcomes.** Segment the 12D parameter space into four clinically meaningful groups to determine whether outcomes are driven by pharmacological interventions, biological interventions, patient demographics, or patient vulnerability:
 
 ```python
+import sys
+sys.path.insert(0, "/path/to/how-to-live-much-longer")
+from zimmerman_bridge import MitoSimulator
+from zimmerman.prompt_receptive_field import PromptReceptiveField
+
+sim = MitoSimulator()  # full 12D
+
 def mito_segmenter(spec):
-    interventions = ["exercise", "nad_supplement", "antioxidant",
-                     "caloric_restriction", "sleep_quality", "stress_mgmt"]
-    patient = ["age", "genetic_vulnerability", "metabolic_demand",
-               "baseline_heteroplasmy", "mitophagy_rate", "biogenesis_rate"]
     return [
-        {"name": "interventions", "params": [p for p in interventions if p in spec]},
-        {"name": "patient", "params": [p for p in patient if p in spec]},
+        {"name": "pharmacological",
+         "params": ["rapamycin_dose", "nad_supplement", "senolytic_dose"]},
+        {"name": "biological",
+         "params": ["yamanaka_intensity", "transplant_rate", "exercise_level"]},
+        {"name": "demographics",
+         "params": ["baseline_age", "baseline_heteroplasmy", "baseline_nad_level"]},
+        {"name": "vulnerability",
+         "params": ["genetic_vulnerability", "metabolic_demand", "inflammation_level"]},
     ]
 
-prf = PromptReceptiveField(mito_sim, segmenter=mito_segmenter)
-report = prf.analyze(base_params=healthy_baseline, n_base=256)
+prf = PromptReceptiveField(sim, segmenter=mito_segmenter)
+report = prf.analyze(
+    base_params={
+        "rapamycin_dose": 0.5, "nad_supplement": 0.5,
+        "senolytic_dose": 0.25, "yamanaka_intensity": 0.0,
+        "transplant_rate": 0.5, "exercise_level": 0.5,
+        "baseline_age": 65, "baseline_heteroplasmy": 0.55,
+        "baseline_nad_level": 0.5, "genetic_vulnerability": 1.0,
+        "metabolic_demand": 1.0, "inflammation_level": 0.3,
+    },
+    n_base=64,
+)
 
-# High interaction for "interventions" means the effectiveness of
-# interventions depends on who the patient is -- a key clinical insight.
-print(f"Intervention interaction: {report['interaction']['interventions']:.3f}")
+# Rankings reveal the receptive field hierarchy:
+report["rankings"]
+# ['pharmacological', 'biological', 'demographics', 'vulnerability']
+
+# High interaction for "vulnerability" means genetic_vulnerability,
+# metabolic_demand, and inflammation_level matter primarily through
+# their interaction with interventions -- a key clinical insight:
+# the same protocol works differently on different patients.
+print(f"Vulnerability interaction: {report['interaction']['vulnerability']:.3f}")
+# ~0.08 -- vulnerability parameters modulate intervention effectiveness
+
+# Demographics (age, baseline het, baseline NAD) have the highest standalone
+# S1 because they set the starting conditions for the 30-year ODE trajectory.
+# Near the heteroplasmy cliff at 0.70, the "demographics" segment's ST
+# increases sharply -- the patient's starting point becomes the dominant
+# determinant of whether ATP collapse occurs.
 ```
 
 ---

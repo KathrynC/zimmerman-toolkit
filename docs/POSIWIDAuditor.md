@@ -183,6 +183,27 @@ for model, scenarios in scenarios_by_model.items():
     print(f"{model}: mean alignment = {batch['aggregate']['mean_overall']:.3f}")
 ```
 
+**JGC: Auditing clinical intervention intentions against simulation reality.** POSIWID reveals that clinical intentions often overestimate achievable heteroplasmy reduction. The gap between what a clinician intends and what the mitochondrial dynamics actually produce is measurable:
+
+```python
+from zimmerman.posiwid import POSIWIDAuditor
+from zimmerman_bridge import MitoSimulator
+
+sim = MitoSimulator()  # full 12D
+auditor = POSIWIDAuditor(sim)
+
+result = auditor.audit(
+    intended_outcomes={"final_heteroplasmy": 0.25, "final_atp": 0.85},
+    params={"rapamycin_dose": 0.25, "nad_supplement": 0.0, "senolytic_dose": 0.0,
+            "yamanaka_intensity": 0.0, "transplant_rate": 0.0, "exercise_level": 0.0,
+            "baseline_age": 70.0, "baseline_heteroplasmy": 0.3, "baseline_nad_level": 0.6,
+            "genetic_vulnerability": 1.0, "metabolic_demand": 1.0, "inflammation_level": 0.25})
+# result["alignment"]["overall"] → 0.797; mild rapamycin falls short of intended het reduction
+# 5 scenarios, mean alignment=0.797
+# The intention to reach het=0.25 with only mild rapamycin is partially realized --
+# the system does reduce heteroplasmy, but not as aggressively as intended
+```
+
 ---
 
 ## Properties & Relations

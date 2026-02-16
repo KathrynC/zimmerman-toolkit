@@ -272,31 +272,60 @@ stats = dieg.batch_roundtrip(n_samples=500)
 print(f"Mean roundtrip error across 6D weight space: {stats['mean_total_error']:.4f}")
 ```
 
-**JGC: Narrating intervention protocols as clinical language.** The mitochondrial aging simulator's intervention parameters translate naturally into medical vocabulary:
+**Mitochondrial aging model: Narrating intervention protocols as clinical language.** The JGC mitochondrial simulator's 12 parameters translate naturally into medical and biological vocabulary. Clinical narrative handles activate an LLM's domain knowledge about mitochondrial biology, the heteroplasmy cliff, and intervention mechanisms:
 
 ```python
+import sys
+sys.path.insert(0, "/path/to/how-to-live-much-longer")
+from zimmerman_bridge import MitoSimulator
+from zimmerman.diegeticizer import Diegeticizer
+
+sim = MitoSimulator()  # full 12D
+
 mito_lexicon = {
     "rapamycin_dose": "mTOR inhibition intensity",
-    "nad_supplement": "NAD+ precursor dosage",
+    "nad_supplement": "NAD+ precursor dosage (NMN/NR)",
+    "senolytic_dose": "senescent cell clearance intensity",
+    "yamanaka_intensity": "partial reprogramming (OSKM) level",
+    "transplant_rate": "healthy mtDNA infusion rate",
     "exercise_level": "daily exercise intensity",
-    "caloric_restriction": "caloric deficit severity",
-    "metformin_dose": "AMPK activation level",
-    "antioxidant_dose": "ROS scavenging capacity",
+    "baseline_age": "patient age",
+    "baseline_heteroplasmy": "mitochondrial DNA damage level",
+    "baseline_nad_level": "cellular NAD+ reserves",
+    "genetic_vulnerability": "haplogroup-dependent fragility",
+    "metabolic_demand": "tissue metabolic requirement",
+    "inflammation_level": "chronic inflammaging severity",
 }
-dieg = Diegeticizer(mito_sim, lexicon=mito_lexicon, n_bins=5)
+dieg = Diegeticizer(sim, lexicon=mito_lexicon, n_bins=5)
 
-result = dieg.diegeticize({"rapamycin_dose": 0.5, "nad_supplement": 0.8,
-                           "exercise_level": 0.3, "caloric_restriction": 0.6,
-                           "metformin_dose": 0.1, "antioxidant_dose": 0.9})
-# "mTOR inhibition intensity": "medium"
-# "NAD+ precursor dosage": "very high"
-# etc.
+# Forward pass: near-cliff patient with transplant protocol
+result = dieg.diegeticize({
+    "rapamycin_dose": 0.5, "nad_supplement": 0.75,
+    "senolytic_dose": 0.5, "yamanaka_intensity": 0.0,
+    "transplant_rate": 0.75, "exercise_level": 0.5,
+    "baseline_age": 72, "baseline_heteroplasmy": 0.65,
+    "baseline_nad_level": 0.45, "genetic_vulnerability": 1.2,
+    "metabolic_demand": 1.0, "inflammation_level": 0.4,
+})
+# result["narrative"] == {
+#   "mTOR inhibition intensity": "medium",
+#   "NAD+ precursor dosage (NMN/NR)": "high",
+#   "senescent cell clearance intensity": "medium",
+#   "partial reprogramming (OSKM) level": "very low",
+#   "healthy mtDNA infusion rate": "high",
+#   "daily exercise intensity": "medium",
+#   "patient age": "high",
+#   "mitochondrial DNA damage level": "high",
+#   ...
+# }
+# "high mitochondrial DNA damage level" and "high healthy mtDNA infusion rate"
+# together activate the LLM's knowledge that transplant is the primary
+# rejuvenation mechanism for patients near the heteroplasmy cliff (Cramer Ch. VIII.G).
 
-# Roundtrip: how much precision is lost?
-rt = dieg.roundtrip_error({"rapamycin_dose": 0.5, "nad_supplement": 0.8,
-                           "exercise_level": 0.3, "caloric_restriction": 0.6,
-                           "metformin_dose": 0.1, "antioxidant_dose": 0.9})
-print(f"Total roundtrip error: {rt['total_error']:.4f}")
+# Roundtrip error across the 12D space
+stats = dieg.batch_roundtrip(n_samples=200)
+print(f"Mean roundtrip error across 12D space: {stats['mean_total_error']:.4f}")
+# ~0.08 -- 5-bin discretization loses about 8% of information on average
 ```
 
 ---

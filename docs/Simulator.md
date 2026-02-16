@@ -112,14 +112,33 @@ spec = {name: (center - radius, center + radius) for name, center in zip(weight_
 sim = SimulatorWrapper(lambda p: run_trial_inmemory(list(p.values())), spec)
 ```
 
-**JGC mitochondrial aging simulator.** The 7-state ODE system is wrapped as:
+**JGC mitochondrial aging simulator.** The 7-state ODE system is wrapped as `MitoSimulator` in `zimmerman_bridge.py`, which implements the `Simulator` protocol natively -- no `SimulatorWrapper` needed:
 
 ```python
-spec = {"metabolic_demand": (0.5, 2.0), "genetic_vulnerability": (0.0, 1.0), ...}
-sim = SimulatorWrapper(run_mito_simulation, spec)
+import sys
+sys.path.insert(0, "/path/to/how-to-live-much-longer")
+from zimmerman_bridge import MitoSimulator
+
+sim = MitoSimulator()  # full 12D (6 intervention + 6 patient)
+sim.param_spec()
+# {'rapamycin_dose': (0.0, 1.0), 'nad_supplement': (0.0, 1.0),
+#  'senolytic_dose': (0.0, 1.0), 'yamanaka_intensity': (0.0, 1.0),
+#  'transplant_rate': (0.0, 1.0), 'exercise_level': (0.0, 1.0),
+#  'baseline_age': (20, 90), 'baseline_heteroplasmy': (0.0, 0.95),
+#  'baseline_nad_level': (0.2, 1.0), 'genetic_vulnerability': (0.5, 2.0),
+#  'metabolic_demand': (0.5, 2.0), 'inflammation_level': (0.0, 1.0)}
+
+result = sim.run({"rapamycin_dose": 0.5, "transplant_rate": 0.75,
+                  "baseline_age": 70, "baseline_heteroplasmy": 0.65})
+# Returns ~20 flat metrics: energy/damage/dynamics/intervention pillars
+# plus trajectory endpoints (final_heteroplasmy, final_atp, final_ros, etc.)
+
+# Intervention-only mode fixes patient params to a default 70-year-old:
+sim_iv = MitoSimulator(intervention_only=True)  # 6D
+len(sim_iv.param_spec())  # 6
 ```
 
-Both can then be passed to `sobol_sensitivity()`, `Falsifier`, `ContrastiveGenerator`, etc. without any adapter code.
+Both `MitoSimulator` and `SimulatorWrapper`-based simulators can be passed to `sobol_sensitivity()`, `Falsifier`, `ContrastiveGenerator`, etc. without any adapter code.
 
 ---
 
