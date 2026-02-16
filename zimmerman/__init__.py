@@ -16,9 +16,9 @@ project (Cramer 2025 mitochondrial aging simulator).
 Modules:
     base        -- Simulator protocol and wrapper types
     sobol       -- Saltelli sampling + Sobol sensitivity indices
-    pds         -- Parameter-Design-State dimension mapper (Zimmerman Ch. 4)
-    posiwid     -- POSIWID alignment auditor (intended vs actual; Beer 1974)
-    prompts     -- Diegetic prompt builder for LLM-mediated design (Zimmerman Ch. 2-3)
+    pds         -- Power-Danger-Structure dimension mapper (Zimmerman §4.6.4; Dodds et al. 2023)
+    posiwid     -- POSIWID alignment auditor (intended vs actual; Beer 1974; Zimmerman §3.5.2)
+    prompts     -- Diegetic prompt builder for LLM-mediated design (Zimmerman §2.2.3, §3.5.3, §4.7.6)
     contrastive -- Contrastive scenario generation (minimal outcome flips)
     falsifier   -- Systematic falsification and assumption testing
 """

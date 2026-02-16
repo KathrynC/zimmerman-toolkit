@@ -25,7 +25,7 @@ Example:
 Reference:
     Zimmerman, J.W. (2025). "Locality, Relation, and Meaning Construction
     in Language, as Implemented in Humans and Large Language Models (LLMs)."
-    PhD dissertation, University of Vermont. Ch. 4.
+    PhD dissertation, University of Vermont. §4.6.4.
 """
 
 from __future__ import annotations

@@ -10,11 +10,12 @@ Three prompt styles:
     DiegeticPrompt: Narrative/contextual prompt that references the
         simulation's own state. Embeds parameters in a domain narrative
         rather than presenting them as raw numbers. Based on Zimmerman
-        (2025) Ch. 2-3: LLMs handle semantic content better than
-        structural/numeric content.
+        (2025) §2.2.3: LLMs handle diegetic content (meaning, semantics)
+        better than supradiegetic content (form, numbers). Numbers are
+        particularly vulnerable to tokenization-induced flattening (§3.5.3).
 
     ContrastivePrompt: "What would a cautious vs aggressive agent choose?"
-        Exploits TALOT/OTTITT meaning-from-contrast (Zimmerman Ch. 5).
+        Exploits TALOT/OTTITT meaning-from-contrast (Zimmerman §4.7.6).
         Generates opposing parameter sets that bracket the problem.
 
 All prompts include param_spec bounds in the output so the LLM knows
@@ -120,8 +121,9 @@ Brief reasoning (1-2 sentences), then ONLY the JSON object."""
 
         Embeds the parameter choices in a narrative context rather than
         presenting them as raw numbers. This aligns with Zimmerman (2025)
-        Ch. 2-3: LLMs construct meaning from distributional semantics
-        (diegetic content), not from structural form.
+        §2.2.3: LLMs construct meaning from diegetic content (distributional
+        semantics), not from supradiegetic form. Numbers are particularly
+        vulnerable to tokenization-induced flattening (§3.5.3).
 
         Args:
             scenario: Description of the scenario or design goal.
@@ -186,8 +188,9 @@ Format: {template}"""
 
         Asks the LLM to generate TWO parameter sets: one from a cautious
         perspective and one from an aggressive perspective. This exploits
-        TALOT/OTTITT meaning-from-contrast (Zimmerman Ch. 5) and forces
-        the LLM to think more carefully about parameter choices.
+        TALOT/OTTITT meaning-from-contrast (Zimmerman §4.7.6) — meaning
+        emerges from the tension between identity and difference — and
+        forces the LLM to think more carefully about parameter choices.
 
         Args:
             scenario: Description of the scenario or design goal.

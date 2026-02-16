@@ -14,7 +14,7 @@ Simulator protocol.
 
 Reference:
     Stafford Beer (1974). "Designing Freedom." CBC Massey Lectures.
-    Zimmerman, J.W. (2025). PhD dissertation, University of Vermont. Ch. 5.
+    Zimmerman, J.W. (2025). PhD dissertation, University of Vermont. §3.5.2.
 """
 
 from __future__ import annotations

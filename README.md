@@ -160,7 +160,7 @@ Alignment scoring per output key:
 
 Parameter-Design-State dimension mapper. Maps abstract high-level dimensions (Power, Danger, Stability) to weighted combinations of concrete simulator parameters. Lets domain experts reason about simulations in meaningful terms rather than raw parameter names.
 
-From Zimmerman (2025) Ch. 4.
+From ousiometric analysis of word meanings (Dodds et al. 2023); applied to simulation via Zimmerman (2025) §4.6.4.
 
 ```python
 from zimmerman import PDSMapper
@@ -189,7 +189,7 @@ print(sensitivity["aggression"]["overall"])
 
 ### `prompts` -- How should an LLM talk to it?
 
-Diegetic prompt builder for LLM-mediated parameter generation. Three prompt styles based on Zimmerman's finding that LLMs handle semantic content better than structural/numeric content (Ch. 2-3):
+Diegetic prompt builder for LLM-mediated parameter generation. Three prompt styles based on Zimmerman's finding (§2.2.3) that LLMs handle diegetic content (meaning) better than supradiegetic content (form/numbers), compounded by tokenization-induced flattening of numeric content (§3.5.3):
 
 ```python
 from zimmerman import PromptBuilder
@@ -206,7 +206,7 @@ prompt = builder.build_diegetic(
 )
 
 # Style 3: Contrastive -- two opposing agents bracket the problem
-# Exploits TALOT/OTTITT meaning-from-contrast (Zimmerman Ch. 5)
+# Exploits TALOT/OTTITT meaning-from-contrast (Zimmerman §4.7.6)
 prompt = builder.build_contrastive(
     "Design a walking robot",
     agent_a="cautious engineer",
