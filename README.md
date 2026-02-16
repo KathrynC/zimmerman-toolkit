@@ -396,24 +396,6 @@ These figures were produced by the toolkit's downstream projects — a 3-link Py
 
 *Per-category sensitivity profiles for 8 gait families. Persona gaits (n=74) show balanced sensitivity; crab walkers concentrate influence on w03/w13; spinners show near-zero S1 (pure interaction). The toolkit reveals that different behavioral regimes have fundamentally different causal structures.*
 
-### `ContrastiveGenerator` / cliff analysis — Where are the behavioral cliffs?
-
-![Cliffiness Heatmap](docs/images/cliffiness_heatmap.png)
-
-*2D slices through 6D weight space showing cliffiness (gradient magnitude of displacement). Bright regions are behavioral cliffs — tiny parameter changes cause large behavioral shifts. The cyan star marks a champion gait perched near a cliff edge. This is what `ContrastiveGenerator` finds: the boundaries where one behavior becomes another.*
-
-### Simulator protocol — The heteroplasmy cliff (mitochondrial aging ODE)
-
-![Heteroplasmy Cliff](docs/images/heteroplasmy_cliff.png)
-
-*The cliff phenomenon in a different simulator: terminal ATP production vs. baseline heteroplasmy (fraction of damaged mtDNA). Above ~70% damage, ATP collapses nonlinearly. The same toolkit that maps behavioral cliffs in a walking robot maps cellular energy cliffs in mitochondrial aging — the protocol is simulator-agnostic.*
-
-### Simulator protocol — Intervention comparison trajectories
-
-![Intervention Comparison](docs/images/intervention_comparison.png)
-
-*30-year ATP and heteroplasmy trajectories under four treatment protocols (no treatment, rapamycin only, NAD+ only, full cocktail). The red dashed line is the heteroplasmy cliff at 0.70. Same simulator protocol, different domain — the toolkit's `POSIWIDAuditor` measures how well each protocol achieves its intended outcomes.*
-
 ## Projects Using the Toolkit
 
 Three simulators currently satisfy the Zimmerman protocol:
