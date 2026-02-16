@@ -1,6 +1,6 @@
 # Zimmerman Simulation Toolkit — Reference Guide
 
-black-box simulator interrogation through six complementary lenses
+black-box simulator interrogation through fourteen complementary lenses
 
 ---
 
@@ -8,7 +8,7 @@ black-box simulator interrogation through six complementary lenses
 
 This toolkit operationalizes key findings from Julia Witte Zimmerman's 2025 PhD dissertation at the University of Vermont: *"Locality, Relation, and Meaning Construction in Language, as Implemented in Humans and Large Language Models (LLMs)."* (Specializing in Complex Systems and Data Science; advised by Peter Sheridan Dodds and Christopher M. Danforth.)
 
-Zimmerman's dissertation investigates how LLMs construct meaning — and where that meaning-making breaks down. Its concepts generate three toolkit components and inform the design of all six:
+Zimmerman's dissertation investigates how LLMs construct meaning — and where that meaning-making breaks down. Its concepts directly generate eleven of the toolkit's fourteen components and inform the design of all fourteen:
 
 **Chapter 2 (§2.2.3): Diegetic vs. Supradiegetic Linguistic Information.** Zimmerman distinguishes two kinds of information carried by language: *diegetic* information — the inside of the word, its meaning, its semantic and propositional content ("imagine a word minus any letters or sounds") — and *supradiegetic* information — the exterior of the word, the arbitrary physical form through which meaning is packaged (letter shapes, syllable sounds). LLMs have "extremely curtailed access — essentially no access at all" to supradiegetic information, because by the time text reaches the model, it has already been converted to token numbers. For an LLM, the diegetic realm is essentially its entire world.
 
@@ -26,15 +26,31 @@ This generates **`PDSMapper`**, which maps abstract PDS dimension values (typica
 
 These generate **`POSIWIDAuditor`** (alignment scoring between intended and actual outcomes) and the *contrastive* prompt style in `PromptBuilder` (two agents — cautious vs. aggressive — bracketing the solution space).
 
+**Chapter 2–3 (§2–3): Meaning-from-Relations.** Language constructs meaning through relations between entities — causal, similarity, and contrast. This principle extends to simulators: the meaning of a parameter is defined by its causal effects on outputs, its similarity to other parameters in outcome space, and the contrasts it enables. **`RelationGraphExtractor`** builds a three-frame multigraph (causal, similarity, contrast) around any point in parameter space, revealing the local relational structure of the simulator.
+
+**Chapter 3 (§3.5, §4.6): Locality.** Zimmerman analyzes how meaning depends on local context — nearby tokens, nearby semantic neighbors, nearby perturbations. In simulation, locality means: does a small change in one parameter affect nearby outputs or distant ones? **`LocalityProfiler`** measures this through manipulation sweeps, quantifying which parameters have local vs. global effects and whether those effects are linear or nonlinear.
+
+**Chapter 4 (§4.6, §4.7): Receptive Fields.** Just as a neural network neuron has a receptive field — the region of input that influences its output — a simulator's outputs have receptive fields over the parameter space. **`PromptReceptiveField`** uses Sobol-based feature attribution to map which segments of an input (parameters, prompt fragments) drive which outputs, revealing the simulator's internal attention structure.
+
+**Chapter 2 (§2.2.3) applied: Diegeticization as Reversible Translation.** If diegetic content (meaning) is what LLMs handle well and supradiegetic content (form/numbers) is what they handle poorly, then the ideal workflow is: translate parameters into narrative, let the LLM reason in narrative, translate back. **`Diegeticizer`** implements this as a reversible bin-based translation — parameter vectors become human-readable narrative descriptions and back again, with measurable roundtrip error.
+
+**Chapter 3 (§3.5.3) applied: Token Fragmentation as Hazard.** Zimmerman's flattening analysis predicts that numeric content near tokenizer boundaries will be especially fragile. **`TokenExtispicyWorkbench`** makes this concrete: given any tokenizer (BPE, SentencePiece, whitespace), it maps the fragmentation hazard surface across the parameter space — which parameter values get tokenized destructively, and how that correlates with LLM output instability.
+
+**Chapter 2 (§2.2.3) applied: Supradiegetic Benchmark.** The diegetic/supradiegetic distinction implies a testable prediction: LLMs should perform better when given diegetic prompts than supradiegetic ones. **`SuperdiegeticBenchmark`** standardizes this comparison into a reproducible battery — same simulator, same scenarios, diegetic vs. numeric prompts — measuring the *diegeticization gain*.
+
+**Chapter 4 (§4.7.6) applied: Structured Contrast Sets.** TALOT/OTTITT implies that minimal-edit contrast pairs are the atoms of meaning. **`ContrastSetGenerator`** extends `ContrastiveGenerator` from single pairs to structured *sets* of contrasts — systematic edits along each parameter axis — creating a complete edit-space map of how meaning changes with form.
+
+**Synthesis: The Dashboard.** **`MeaningConstructionDashboard`** aggregates reports from all other tools into a unified multi-dimensional assessment. It implements the dissertation's Chapter 6 vision: meaning construction is not any single measure but the convergence of sensitivity, locality, relation, alignment, and form across multiple analytical frames.
+
 **The classical analysis tools** — `sobol_sensitivity`, `Falsifier`, and `ContrastiveGenerator` — are not thesis-derived. They implement standard simulation analysis techniques (Saltelli 2002, Jansen 1999) generalized to work with any simulator satisfying the same protocol. But they serve the thesis-derived tools: you need to know which parameters matter (Sobol) before you can build meaningful PDS mappings, you need to know where the simulator breaks (Falsifier) before you can trust POSIWID alignment scores, and you need to know where behavioral boundaries lie (ContrastiveGenerator) before you can design prompts that navigate them.
 
-The toolkit was created by Kathryn Cramer, using Claude as utilities for working on research with Zimmerman and as an enhancement to the aging simulator she created for John G. Cramer. It was extracted and generalized from domain-specific code in the [how-to-live-much-longer](../how-to-live-much-longer) mitochondrial aging simulator project (based on John G. Cramer's forthcoming book *How to Live Much Longer*), where each module first proved its value on a concrete research problem before being lifted into a simulator-agnostic library.
+The toolkit was created by Kathryn Cramer, using Claude as utilities for working on research with Zimmerman and as an enhancement to the aging simulator she created for John G. Cramer. It was extracted and generalized from domain-specific code in the [how-to-live-much-longer](../how-to-live-much-longer) mitochondrial aging simulator project (based on John G. Cramer's forthcoming book *How to Live Much Longer*), where each module first proves its value on a concrete research problem before being lifted into a simulator-agnostic library.
 
 ---
 
 ## Overview
 
-The Zimmerman Toolkit analyzes any simulator satisfying a two-method protocol (`run` + `param_spec`). It provides six tools that ask fundamentally different questions about the simulator's behavior:
+The Zimmerman Toolkit analyzes any simulator satisfying a two-method protocol (`run` + `param_spec`). It provides fourteen tools organized across four tiers — from classical analysis through meaning construction — each asking a fundamentally different question about the simulator's behavior:
 
 | Tool | Question | Method |
 |------|----------|--------|
@@ -44,6 +60,14 @@ The Zimmerman Toolkit analyzes any simulator satisfying a two-method protocol (`
 | `POSIWIDAuditor` | Does it do what we intended? | Alignment scoring (direction + magnitude) |
 | `PDSMapper` | Can we control it through abstract dimensions? | Linear dimension-to-parameter mapping |
 | `PromptBuilder` | How do we ask an LLM to design parameters? | Three prompt styles (numeric, diegetic, contrastive) |
+| `ContrastSetGenerator` | What does the edit-space look like? | Structured per-axis contrast sets (TALOT/OTTITT) |
+| `LocalityProfiler` | Are effects local or global? | Manipulation sweeps + linearity tests |
+| `RelationGraphExtractor` | What is the relational structure at a point? | Three-frame multigraph (causal, similarity, contrast) |
+| `Diegeticizer` | Can we translate parameters to narrative and back? | Reversible bin-based diegetic↔numeric translation |
+| `TokenExtispicyWorkbench` | Where does tokenization damage numeric content? | Fragmentation hazard surface over parameter space |
+| `SuperdiegeticBenchmark` | Do diegetic prompts outperform numeric ones? | Standardized form-vs-meaning battery |
+| `PromptReceptiveField` | Which input segments drive which outputs? | Sobol-based feature attribution over prompt segments |
+| `MeaningConstructionDashboard` | What does the full picture look like? | Unified aggregation across all tools |
 
 ---
 
@@ -63,17 +87,31 @@ Wrap any function with `SimulatorWrapper(fn, spec)`. See `Simulator` for details
 
 ## Function Pages
 
-### Analysis
+### Tier 1 — Classical Analysis
 
 - **[`sobol_sensitivity`](sobol_sensitivity.md)** — Global sensitivity via Saltelli sampling. Decomposes output variance into per-parameter main effects (S1) and interaction effects (ST).
 - **[`Falsifier`](Falsifier.md)** — Three-phase falsification: random sampling, boundary testing, adversarial probing. Finds parameter combinations that violate assertions.
 - **[`ContrastiveGenerator`](ContrastiveGenerator.md)** — Minimal-perturbation search via bisection. Finds the smallest parameter change that flips a categorical outcome.
 
-### Alignment & Design
+### Tier 2 — Alignment & Design
 
 - **[`POSIWIDAuditor`](POSIWIDAuditor.md)** — "The Purpose Of a System Is What It Does." Quantifies the gap between intended and actual outcomes.
 - **[`PDSMapper`](PDSMapper.md)** — Maps abstract semantic dimensions (Power, Danger, Structure) to concrete parameter values. Enables navigation of parameter space through meaningful axes.
 - **[`PromptBuilder`](PromptBuilder.md)** — Generates prompts in three styles (numeric, diegetic, contrastive) for LLM-mediated parameter generation.
+
+### Tier 3 — Meaning Construction
+
+- **[`ContrastSetGenerator`](ContrastSetGenerator.md)** — Structured edit-space contrast sets via TALOT/OTTITT. Generates systematic per-axis minimal edits that map how meaning changes with form.
+- **[`LocalityProfiler`](LocalityProfiler.md)** — Locality profiling via manipulation sweeps. Measures whether parameter effects are local or global, linear or nonlinear.
+- **[`RelationGraphExtractor`](RelationGraphExtractor.md)** — Three-frame relation multigraph (causal, similarity, contrast) at any point in parameter space. Reveals the local relational structure of the simulator.
+- **[`Diegeticizer`](Diegeticizer.md)** — Reversible translation between parameter vectors and narrative descriptions. Bin-based discretization with measurable roundtrip error.
+- **[`TokenExtispicyWorkbench`](TokenExtispicyWorkbench.md)** — Token fragmentation hazard surface analysis. Maps where tokenization damages numeric content across the parameter space.
+- **[`SuperdiegeticBenchmark`](SuperdiegeticBenchmark.md)** — Standardized form-vs-meaning battery. Measures the diegeticization gain: how much better diegetic prompts perform than numeric ones.
+- **[`PromptReceptiveField`](PromptReceptiveField.md)** — Sobol-based feature attribution over input segments. Maps which parts of a prompt drive which simulation outputs.
+
+### Tier 4 — Synthesis
+
+- **[`MeaningConstructionDashboard`](MeaningConstructionDashboard.md)** — Unified aggregator across all tools. Compiles multi-dimensional assessments with cross-section recommendations.
 
 ### Infrastructure
 
@@ -84,19 +122,31 @@ Wrap any function with `SimulatorWrapper(fn, spec)`. See `Simulator` for details
 ## Typical Workflow
 
 ```
-1. Define simulator         Simulator / SimulatorWrapper
+1. Define simulator          Simulator / SimulatorWrapper
          │
-2. Verify stability         Falsifier.falsify()
+2. Verify stability          Falsifier.falsify()
          │
-3. Map sensitivity          sobol_sensitivity()
-         │                  ContrastiveGenerator.find_contrastive()
+3. Map sensitivity           sobol_sensitivity()
+         │                   ContrastiveGenerator.find_contrastive()
          │
-4. Design parameters        PromptBuilder.build_diegetic()  →  LLM
-         │                  PDSMapper.map_dimensions_to_params()
+4. Profile structure         LocalityProfiler.profile()
+         │                   RelationGraphExtractor.extract()
+         │                   ContrastSetGenerator.generate()
          │
-5. Audit alignment          POSIWIDAuditor.audit()
+5. Assess tokenizer risk     TokenExtispicyWorkbench.analyze()
          │
-6. Iterate                  Update prompts, mappings, or assertions
+6. Design parameters         PromptBuilder.build_diegetic()  →  LLM
+         │                   PDSMapper.map_dimensions_to_params()
+         │                   Diegeticizer.diegeticize()  →  LLM  →  .re_diegeticize()
+         │
+7. Benchmark prompt styles   SuperdiegeticBenchmark.run_battery()
+         │                   PromptReceptiveField.analyze()
+         │
+8. Audit alignment           POSIWIDAuditor.audit()
+         │
+9. Synthesize                MeaningConstructionDashboard.compile()
+         │
+10. Iterate                  Update prompts, mappings, or assertions
 ```
 
 ---
@@ -107,7 +157,7 @@ Wrap any function with `SimulatorWrapper(fn, spec)`. See `Simulator` for details
 
 The toolkit implements Cramer's Transactional Interpretation of Quantum Mechanics (TIQM) as a simulation design metaphor:
 
-- **Offer wave**: `PromptBuilder` → LLM → parameter vector
+- **Offer wave**: `PromptBuilder` → LLM → parameter vector (or `Diegeticizer` → narrative → LLM → narrative → `re_diegeticize()`)
 - **Confirmation wave**: `POSIWIDAuditor` → alignment score
 - **Transaction**: High alignment = the offer was confirmed
 
@@ -118,8 +168,29 @@ Using different LLM models for offer vs. confirmation prevents self-confirmation
 - `sobol_sensitivity` gives **global** sensitivity across the full parameter range.
 - `ContrastiveGenerator.sensitivity_from_contrastives()` gives **local** sensitivity at specific behavioral boundaries.
 - `PDSMapper.sensitivity_per_dimension()` gives **abstract-dimension** sensitivity through the PDS mapping.
+- `LocalityProfiler.profile()` gives **locality** — are effects concentrated or distributed?
+- `PromptReceptiveField.analyze()` gives **attribution** — which input segments drive which outputs?
 
-Three views of the same underlying question: "what drives this simulator?"
+Five views of the same underlying question: "what drives this simulator?"
+
+### Diegetic ↔ Supradiegetic Spectrum
+
+Multiple tools probe the diegetic/supradiegetic boundary from different angles:
+
+- `Diegeticizer` translates between numeric and narrative representations, measuring roundtrip information loss.
+- `SuperdiegeticBenchmark` measures the performance gap between diegetic and numeric prompts.
+- `TokenExtispicyWorkbench` maps where tokenization — the supradiegetic bottleneck — damages numeric content.
+- `PromptBuilder` provides three prompt styles that position differently along this spectrum.
+
+Together these answer: "how much does form matter for this simulator, and where?"
+
+### Meaning-from-Relations
+
+Three tools operationalize the dissertation's core insight that meaning is constructed through relations:
+
+- `RelationGraphExtractor` builds the relational structure explicitly (causal, similarity, contrast frames).
+- `ContrastSetGenerator` generates the structured contrast sets from which meaning emerges (TALOT/OTTITT).
+- `LocalityProfiler` measures how far relational influence extends in parameter space.
 
 ### Numpy-Only
 
