@@ -20,7 +20,15 @@ Modules:
     posiwid     -- POSIWID alignment auditor (intended vs actual; Beer 1974; Zimmerman §3.5.2)
     prompts     -- Diegetic prompt builder for LLM-mediated design (Zimmerman §2.2.3, §3.5.3, §4.7.6)
     contrastive -- Contrastive scenario generation (minimal outcome flips)
+    contrast_set_generator -- Structured edit-space contrast sets (TALOT/OTTITT harness)
     falsifier   -- Systematic falsification and assumption testing
+    relation_graph_extractor -- Meaning-from-relations multigraph extraction (Zimmerman §2-3)
+    locality_profiler    -- Locality profiling via manipulation sweeps (Zimmerman §3.5, §4.6)
+    prompt_receptive_field -- Feature attribution over input segments via Sobol (Zimmerman §4.6, §4.7)
+    diegeticizer -- Reversible translation between parameter vectors and narrative descriptions
+    supradiegetic_benchmark -- Standardized form-vs-meaning battery (diegeticization gain)
+    token_extispicy -- Token fragmentation hazard surface analysis (Zimmerman §3.5.3)
+    meaning_construction_dashboard -- Unified aggregator for multi-tool reports
 """
 
 from zimmerman.base import Simulator, SimulatorWrapper
@@ -29,7 +37,15 @@ from zimmerman.pds import PDSMapper
 from zimmerman.posiwid import POSIWIDAuditor
 from zimmerman.prompts import PromptBuilder
 from zimmerman.contrastive import ContrastiveGenerator
+from zimmerman.contrast_set_generator import ContrastSetGenerator
 from zimmerman.falsifier import Falsifier
+from zimmerman.relation_graph_extractor import RelationGraphExtractor
+from zimmerman.locality_profiler import LocalityProfiler
+from zimmerman.prompt_receptive_field import PromptReceptiveField
+from zimmerman.diegeticizer import Diegeticizer
+from zimmerman.supradiegetic_benchmark import SuperdiegeticBenchmark
+from zimmerman.token_extispicy import TokenExtispicyWorkbench
+from zimmerman.meaning_construction_dashboard import MeaningConstructionDashboard
 
 __version__ = "0.1.0"
 
@@ -44,5 +60,13 @@ __all__ = [
     "POSIWIDAuditor",
     "PromptBuilder",
     "ContrastiveGenerator",
+    "ContrastSetGenerator",
     "Falsifier",
+    "RelationGraphExtractor",
+    "LocalityProfiler",
+    "PromptReceptiveField",
+    "Diegeticizer",
+    "SuperdiegeticBenchmark",
+    "TokenExtispicyWorkbench",
+    "MeaningConstructionDashboard",
 ]
