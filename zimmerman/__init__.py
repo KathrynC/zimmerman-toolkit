@@ -29,6 +29,8 @@ Modules:
     supradiegetic_benchmark -- Standardized form-vs-meaning battery (diegeticization gain)
     token_extispicy -- Token fragmentation hazard surface analysis (Zimmerman §3.5.3)
     meaning_construction_dashboard -- Unified aggregator for multi-tool reports
+    trajectory_metrics   -- State-space path metrics for ODE simulator trajectories
+    output_schema        -- Shared JSON envelope for cross-simulator output interop
 """
 
 from zimmerman.base import Simulator, SimulatorWrapper
@@ -46,6 +48,9 @@ from zimmerman.diegeticizer import Diegeticizer
 from zimmerman.supradiegetic_benchmark import SuperdiegeticBenchmark
 from zimmerman.token_extispicy import TokenExtispicyWorkbench
 from zimmerman.meaning_construction_dashboard import MeaningConstructionDashboard
+from zimmerman.trajectory_metrics import trajectory_metrics, TrajectoryMetricsProfiler
+from zimmerman.output_schema import SimulatorOutput, validate_output, compare_outputs, NumpyEncoder
+from zimmerman.visualizations import sobol_class_profile_matrix, plot_sobol_class_profiles
 
 __version__ = "0.1.0"
 
@@ -69,4 +74,12 @@ __all__ = [
     "SuperdiegeticBenchmark",
     "TokenExtispicyWorkbench",
     "MeaningConstructionDashboard",
+    "trajectory_metrics",
+    "TrajectoryMetricsProfiler",
+    "SimulatorOutput",
+    "validate_output",
+    "compare_outputs",
+    "NumpyEncoder",
+    "sobol_class_profile_matrix",
+    "plot_sobol_class_profiles",
 ]
